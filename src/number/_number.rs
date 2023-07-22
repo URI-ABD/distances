@@ -7,6 +7,7 @@ use core::{
     fmt::{Debug, Display},
     iter::{Product, Sum},
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, RemAssign, Sub, SubAssign},
+    str::FromStr,
 };
 
 /// Collections of `Number`s can be used to calculate distances.
@@ -23,6 +24,7 @@ pub trait Number:
     + DivAssign<Self>
     + Rem<Output = Self>
     + RemAssign<Self>
+    + FromStr
     + Copy
     + Clone
     + PartialEq
@@ -38,6 +40,12 @@ pub trait Number:
 
     /// Returns the multiplicative identity.
     fn one() -> Self;
+
+    /// Returns 2
+    fn two() -> Self;
+
+    /// Returns 1 / 2
+    fn half() -> Self;
 
     /// Returns `self + a * b`.
     #[must_use]
@@ -73,6 +81,18 @@ pub trait Number:
     #[must_use]
     fn powi(self, exp: i32) -> Self;
 
+    /// Returns the square of the number
+    #[must_use]
+    fn square(self) -> Self {
+        self * self
+    }
+
+    /// Returns the cube of the number
+    #[must_use]
+    fn cube(self) -> Self {
+        self * self * self
+    }
+
     /// Returns the number of bytes used to represent a `Number`.
     #[must_use]
     fn num_bytes() -> usize;
@@ -97,6 +117,14 @@ impl Number for f32 {
 
     fn one() -> Self {
         1.0
+    }
+
+    fn two() -> Self {
+        2.0
+    }
+
+    fn half() -> Self {
+        0.5
     }
 
     fn mul_add(self, a: Self, b: Self) -> Self {
@@ -177,6 +205,14 @@ impl Number for f64 {
 
     fn one() -> Self {
         1.0
+    }
+
+    fn two() -> Self {
+        2.0
+    }
+
+    fn half() -> Self {
+        0.5
     }
 
     fn mul_add(self, a: Self, b: Self) -> Self {
@@ -263,6 +299,14 @@ macro_rules! impl_number_iint {
                     1
                 }
 
+                fn two() -> Self {
+                    2
+                }
+
+                fn half() -> Self {
+                    0
+                }
+
                 fn mul_add(self, a: Self, b: Self) -> Self {
                     self + a * b
                 }
@@ -344,6 +388,14 @@ macro_rules! impl_number_uint {
 
                 fn one() -> Self {
                     1
+                }
+
+                fn two() -> Self {
+                    2
+                }
+
+                fn half() -> Self {
+                    0
                 }
 
                 fn mul_add(self, a: Self, b: Self) -> Self {

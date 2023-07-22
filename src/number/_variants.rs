@@ -70,6 +70,12 @@ pub trait Float: Number {
     #[must_use]
     fn cbrt(self) -> Self;
 
+    /// Returns the fourth root of a `Float`.
+    #[must_use]
+    fn fort(self) -> Self {
+        self.sqrt().sqrt()
+    }
+
     /// The square-root of 2.
     #[must_use]
     fn sqrt_2() -> Self;
@@ -97,6 +103,10 @@ pub trait Float: Number {
     /// deviations of the mean (assuming a normal distribution).
     #[must_use]
     fn erf(self) -> Self;
+
+    /// Efficient implementation of Sigmoid function, \\( S(x) = \frac{1}{1 + e^{-x}} \\), see [Sigmoid function](https://en.wikipedia.org/wiki/Sigmoid_function)
+    #[must_use]
+    fn sigmoid(self) -> Self;
 
     /// Returns the base 2 logarithm.
     #[must_use]
@@ -132,8 +142,18 @@ impl Float for f32 {
         libm::erff(self)
     }
 
+    fn sigmoid(self) -> Self {
+        if self < -40. {
+            0.
+        } else if self > 40. {
+            1.
+        } else {
+            1. / (1. + Self::exp(-self))
+        }
+    }
+
     fn log2(self) -> Self {
-        self.log2()
+        Self::log2(self)
     }
 }
 
@@ -166,7 +186,17 @@ impl Float for f64 {
         libm::erf(self)
     }
 
+    fn sigmoid(self) -> Self {
+        if self < -40. {
+            0.
+        } else if self > 40. {
+            1.
+        } else {
+            1. / (1. + Self::exp(-self))
+        }
+    }
+
     fn log2(self) -> Self {
-        self.log2()
+        Self::log2(self)
     }
 }

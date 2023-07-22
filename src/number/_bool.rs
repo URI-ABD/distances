@@ -1,5 +1,7 @@
 //! `NumBool` is a `Number` that can be used as a boolean.
 
+use core::num::ParseIntError;
+
 use crate::Number;
 
 /// A `Number` that can be used as a boolean.
@@ -116,6 +118,14 @@ impl core::ops::SubAssign for Bool {
     }
 }
 
+impl core::str::FromStr for Bool {
+    type Err = ParseIntError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        u8::from_str(s).map(Self)
+    }
+}
+
 impl Number for Bool {
     fn zero() -> Self {
         Self(0)
@@ -123,6 +133,14 @@ impl Number for Bool {
 
     fn one() -> Self {
         Self(1)
+    }
+
+    fn two() -> Self {
+        Self::one()
+    }
+
+    fn half() -> Self {
+        Self::one()
     }
 
     fn mul_add(self, a: Self, b: Self) -> Self {
