@@ -36,6 +36,16 @@ impl core::iter::Sum for Bool {
     }
 }
 
+impl core::iter::Product for Bool {
+    fn product<I: Iterator<Item = Self>>(mut iter: I) -> Self {
+        if iter.all(|v| v.as_bool()) {
+            Self(1)
+        } else {
+            Self(0)
+        }
+    }
+}
+
 impl core::ops::Add for Bool {
     type Output = Self;
 

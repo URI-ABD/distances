@@ -5,7 +5,7 @@
 
 use core::{
     fmt::{Debug, Display},
-    iter::Sum,
+    iter::{Product, Sum},
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, RemAssign, Sub, SubAssign},
 };
 
@@ -14,6 +14,7 @@ pub trait Number:
     Add<Output = Self>
     + AddAssign<Self>
     + Sum<Self>
+    + Product<Self>
     + Sub<Output = Self>
     + SubAssign<Self>
     + Mul<Output = Self>
