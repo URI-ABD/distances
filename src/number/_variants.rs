@@ -70,8 +70,15 @@ pub trait Float: Number {
     #[must_use]
     fn cbrt(self) -> Self;
 
+    /// The square-root of 2.
+    #[must_use]
+    fn sqrt_2() -> Self;
+
     /// Returns the machine epsilon for a `Float`.
     fn epsilon() -> Self;
+
+    /// Whether the Float is positive
+    fn is_pos(self) -> bool;
 
     /// Returns the inverse square root of a `Float`, i.e. `1.0 / self.sqrt()`.
     #[must_use]
@@ -82,31 +89,84 @@ pub trait Float: Number {
     /// Returns `self` raised to the power of `exp`.
     #[must_use]
     fn powf(self, exp: Self) -> Self;
+
+    /// Error function
+    ///
+    /// Calculates an approximation to the “error function”, which estimates
+    /// the probability that an observation will fall within x standard
+    /// deviations of the mean (assuming a normal distribution).
+    #[must_use]
+    fn erf(self) -> Self;
+
+    /// Returns the base 2 logarithm.
+    #[must_use]
+    fn log2(self) -> Self;
 }
 
-/// Macro to implement `UIntNumber` for all unsigned integer types.
-macro_rules! impl_float {
-    ($($ty:ty),*) => {
-        $(
-            impl Float for $ty {
-                fn sqrt(self) -> Self {
-                    Self::sqrt(self)
-                }
+impl Float for f32 {
+    fn sqrt(self) -> Self {
+        Self::sqrt(self)
+    }
 
-                fn cbrt(self) -> Self {
-                    Self::cbrt(self)
-                }
+    fn cbrt(self) -> Self {
+        Self::cbrt(self)
+    }
 
-                fn epsilon() -> Self {
-                    Self::EPSILON
-                }
+    fn sqrt_2() -> Self {
+        core::f32::consts::SQRT_2
+    }
 
-                fn powf(self, exp: Self) -> Self {
-                    Self::powf(self, exp)
-                }
-            }
-        )*
+    fn epsilon() -> Self {
+        Self::EPSILON
+    }
+
+    fn is_pos(self) -> bool {
+        self.is_sign_positive()
+    }
+
+    fn powf(self, exp: Self) -> Self {
+        Self::powf(self, exp)
+    }
+
+    fn erf(self) -> Self {
+        libm::erff(self)
+    }
+
+    fn log2(self) -> Self {
+        self.log2()
     }
 }
 
-impl_float!(f32, f64);
+impl Float for f64 {
+    fn sqrt(self) -> Self {
+        Self::sqrt(self)
+    }
+
+    fn cbrt(self) -> Self {
+        Self::cbrt(self)
+    }
+
+    fn sqrt_2() -> Self {
+        core::f64::consts::SQRT_2
+    }
+
+    fn epsilon() -> Self {
+        Self::EPSILON
+    }
+
+    fn is_pos(self) -> bool {
+        self.is_sign_positive()
+    }
+
+    fn powf(self, exp: Self) -> Self {
+        Self::powf(self, exp)
+    }
+
+    fn erf(self) -> Self {
+        libm::erf(self)
+    }
+
+    fn log2(self) -> Self {
+        self.log2()
+    }
+}
