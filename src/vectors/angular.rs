@@ -35,6 +35,9 @@ use crate::{
 ///
 /// * [Cosine similarity](https://en.wikipedia.org/wiki/Cosine_similarity)
 pub fn cosine<T: Number, U: Float>(x: &[T], y: &[T]) -> U {
+    debug_assert_eq!(x.len(), y.len());
+    debug_assert!(!x.is_empty());
+
     let [xx, yy, xy] = x
         .iter()
         .zip(y.iter())
@@ -89,6 +92,9 @@ pub fn cosine<T: Number, U: Float>(x: &[T], y: &[T]) -> U {
 ///
 /// * [Hamming distance](https://en.wikipedia.org/wiki/Hamming_distance)
 pub fn hamming<T: Int, U: UInt>(x: &[T], y: &[T]) -> U {
+    debug_assert_eq!(x.len(), y.len());
+    debug_assert!(!x.is_empty());
+
     U::from(x.iter().zip(y.iter()).filter(|(&a, &b)| a != b).count())
 }
 
@@ -120,6 +126,9 @@ pub fn hamming<T: Int, U: UInt>(x: &[T], y: &[T]) -> U {
 ///
 /// * [Canberra distance](https://en.wikipedia.org/wiki/Canberra_distance)
 pub fn canberra<T: Number, U: Float>(x: &[T], y: &[T]) -> U {
+    debug_assert_eq!(x.len(), y.len());
+    debug_assert!(!x.is_empty());
+
     x.iter()
         .map(|&v| U::from(v))
         .zip(y.iter().map(|&v| U::from(v)))
