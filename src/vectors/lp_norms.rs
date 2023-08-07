@@ -12,6 +12,10 @@ use super::utils::abs_diff_iter;
 /// root of the sum of the squares of the absolute differences between the
 /// corresponding elements of the two vectors.
 ///
+/// Computing this distance with vectors of differing or zero dimensionality is
+/// nonsensical - attempting to do so will panic in debug mode, and may silently
+/// give incorrect values in release mode.
+///
 /// # Arguments
 ///
 /// * `x` - The first slice of `Number`s.
@@ -38,6 +42,10 @@ pub fn euclidean<T: Number, U: Float>(x: &[T], y: &[T]) -> U {
 /// Also known as the squared L2-norm, the squared Euclidean distance is defined
 /// as the sum of the squares of the absolute differences between the
 /// corresponding elements of the two vectors.
+///
+/// Computing this distance with vectors of differing or zero dimensionality is
+/// nonsensical - attempting to do so will panic in debug mode, and may silently
+/// give incorrect values in release mode.
 ///
 /// # Arguments
 ///
@@ -66,6 +74,10 @@ pub fn euclidean_sq<T: Number, U: Number>(x: &[T], y: &[T]) -> U {
 /// defined as the sum of the absolute differences between the corresponding
 /// elements of the two vectors.
 ///
+/// Computing this distance with vectors of differing or zero dimensionality is
+/// nonsensical - attempting to do so will panic in debug mode, and may silently
+/// give incorrect values in release mode.
+///
 /// # Arguments
 ///
 /// * `x` - The first slice of `Number`s.
@@ -91,6 +103,10 @@ pub fn manhattan<T: Number>(x: &[T], y: &[T]) -> T {
 ///
 /// The L3-norm is defined as the cubic root of the sum of the cubes of the
 /// absolute differences between the corresponding elements of the two vectors.
+///
+/// Computing this distance with vectors of differing or zero dimensionality is
+/// nonsensical - attempting to do so will panic in debug mode, and may silently
+/// give incorrect values in release mode.
 ///
 /// # Arguments
 ///
@@ -121,6 +137,10 @@ pub fn l3_norm<T: Number, U: Float>(x: &[T], y: &[T]) -> U {
 ///
 /// The L4-norm is defined as the fourth root of the sum of the fourth powers of
 /// the absolute differences between the corresponding elements of the two
+///
+/// Computing this distance with vectors of differing or zero dimensionality is
+/// nonsensical - attempting to do so will panic in debug mode, and may silently
+/// give incorrect values in release mode.
 ///
 /// # Arguments
 ///
@@ -154,6 +174,10 @@ pub fn l4_norm<T: Number, U: Float>(x: &[T], y: &[T]) -> U {
 /// Also known as the L∞-norm, the Chebyshev distance is defined as the maximum
 /// absolute difference between the corresponding elements of the two vectors.
 ///
+/// Computing this distance with vectors of differing or zero dimensionality is
+/// nonsensical - attempting to do so will panic in debug mode, and may silently
+/// give incorrect values in release mode.
+///
 /// # Arguments
 ///
 /// * `x` - The first slice of `Number`s.
@@ -182,6 +206,10 @@ pub fn chebyshev<T: Number>(x: &[T], y: &[T]) -> T {
 /// This is defined as the sum of the pth powers of the absolute differences
 /// between the corresponding elements of the two slices.
 ///
+/// Computing this distance with vectors of differing or zero dimensionality is
+/// nonsensical - attempting to do so will panic in debug mode, and may silently
+/// give incorrect values in release mode.
+///
 /// # Arguments
 ///
 /// * `x` - The first slice of `Number`s.
@@ -208,6 +236,10 @@ pub fn minkowski_p<T: Number, U: Float>(p: i32) -> impl Fn(&[T], &[T]) -> U {
 ///
 /// The Lp-norm is defined as the pth root of the sum of the pth powers of
 /// the absolute differences between the corresponding elements of the two
+///
+/// Computing this distance with vectors of differing or zero dimensionality is
+/// nonsensical - attempting to do so will panic in debug mode, and may silently
+/// give incorrect values in release mode.
 ///
 /// # Arguments
 ///

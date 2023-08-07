@@ -13,6 +13,10 @@ use crate::{
 /// The cosine similarity is defined as the dot product of the two vectors
 /// divided by the product of their magnitudes.
 ///
+/// Computing this distance with vectors of differing or zero dimensionality is
+/// nonsensical - attempting to do so will panic in debug mode, and may silently
+/// give incorrect values in release mode.
+///
 /// # Arguments
 ///
 /// * `x`: A slice of numbers.
@@ -63,6 +67,10 @@ pub fn cosine<T: Number, U: Float>(x: &[T], y: &[T]) -> U {
 /// The Hamming distance is defined as the number of positions at which
 /// the corresponding elements are different.
 ///
+/// Computing this distance with vectors of differing or zero dimensionality is
+/// nonsensical - attempting to do so will panic in debug mode, and may silently
+/// give incorrect values in release mode.
+///
 /// # Arguments
 ///
 /// * `x`: A slice of numbers.
@@ -103,6 +111,10 @@ pub fn hamming<T: Int, U: UInt>(x: &[T], y: &[T]) -> U {
 /// The Canberra distance is defined as the sum of the absolute differences
 /// between the elements of the two vectors divided by the sum of the absolute
 /// values of the elements of the two vectors.
+///
+/// Computing this distance with vectors of differing or zero dimensionality is
+/// nonsensical - attempting to do so will panic in debug mode, and may silently
+/// give incorrect values in release mode.
 ///
 /// # Arguments
 ///
