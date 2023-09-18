@@ -187,3 +187,84 @@ pub fn bray_curtis<T: UInt, U: Float>(x: &[T], y: &[T]) -> U {
         }
     }
 }
+
+/// Computes the dot product between two vectors.
+///
+/// The dot product is defined as the sum of the products of the
+/// corresponding entries of the two vectors.
+///
+/// # Arguments
+///
+/// * `x`: A slice of numbers.
+/// * `y`: A slice of numbers.
+///
+/// # Examples
+///
+/// ```
+/// use distances::vectors::dot_product;
+///
+/// let x: Vec<f32> = vec![1.0, 5.0, 4.0];
+/// let y: Vec<f32> = vec![2.5, 3.0, 0.5];
+///
+/// let distance: f32 = dot_product(&x, &y);
+///
+/// assert!((distance - 19.5).abs() < f32::EPSILON);
+/// ```
+///
+/// # References
+///
+/// * [Dot product](https://en.wikipedia.org/wiki/Dot_product)
+pub fn dot_product<T: Number, U: Float>(x: &[T], y: &[T]) -> U {
+    let dot_product: T = x.iter().zip(y.iter()).map(|(&a, &b)| a * b).sum();
+
+    let dot_product: U = U::from(dot_product);
+
+    if dot_product < U::epsilon() {
+        U::zero()
+    } else {
+        dot_product
+    }
+}
+
+/// Computes a distance between two vectors using their dot product.
+/// Vectors with greater dot products are considered more similar,
+/// and hence have a smaller distance.
+///
+/// The dot product is defined as the sum of the products of the
+/// corresponding entries of the two vectors.
+///
+/// Thia function is not stable.
+///
+/// See the [`crate::vectors`] module documentation for information on this
+/// function's potentially unexpected behaviors
+///
+/// # Arguments
+///
+/// * `x`: A slice of numbers.
+/// * `y`: A slice of numbers.
+///
+/// # Examples
+///
+/// ```
+/// use distances::vectors::dot_product_distance;
+///
+/// let x: Vec<f32> = vec![1.0, 5.0, 4.0];
+/// let y: Vec<f32> = vec![2.5, 3.0, 0.5];
+///
+/// let distance: f32 = dot_product_distance(&x, &y);
+///
+/// assert!((distance - 0.05128205128).abs() < f32::EPSILON);
+/// ```
+///
+/// # References
+///
+/// * [Dot product](https://en.wikipedia.org/wiki/Dot_product)
+pub fn dot_product_distance<T: Number, U: Float>(x: &[T], y: &[T]) -> U {
+    let dot_product: U = dot_product(x, y);
+
+    if dot_product < U::epsilon() {
+        dot_product
+    } else {
+        U::one() / dot_product
+    }
+}
