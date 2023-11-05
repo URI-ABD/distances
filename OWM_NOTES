@@ -1,0 +1,2 @@
+impl_naive_int WILL NOT WORK. JUST EXISTS SO I CAN GET TESTING
+At least, I think the map will fuck w the simd. Not sure. Need to inspect compilation

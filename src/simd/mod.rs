@@ -52,12 +52,16 @@ mod f64x2;
 mod f64x4;
 mod f64x8;
 
+mod u32x4;
+
 pub use f32x16::F32x16;
 pub use f32x4::F32x4;
 pub use f32x8::F32x8;
 pub use f64x2::F64x2;
 pub use f64x4::F64x4;
 pub use f64x8::F64x8;
+
+pub use u32x4::U32x4;
 
 pub(crate) trait Naive {
     type Output;
@@ -78,6 +82,9 @@ pub(crate) trait Vectorized {
 
 impl_naive!(f64, f64);
 impl_naive!(f32, f32);
+
+use crate::Number;
+impl_naive_int!(u32, f32);
 
 /// Calculate the euclidean distance between two slices of equal length
 ///
