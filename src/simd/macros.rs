@@ -269,17 +269,11 @@ macro_rules! impl_distances_int {
                 let i = $name::from_slice(a);
                 let j = $name::from_slice(b);
                 /*
-                    Typically we'd just compute (i-j)^2 here but i-j itself
-                    can be negative even if the metric can't. Therefore we
-                    break it up into two computations that are nonnegative.
-                    
-                    This is only important if $ty is unsigned.
-
-                    TODO (OWM): Can we bring the # of math ops down here?
-                        - Total is (3 muls, 3 add/sub) = 6
+                    This overflows on multiplications often because
+                    (i-j)^2 might fit into a u32 but i*j wont
                 */
-                let intermediate = i*j;
-                i*i + j*j - intermediate - intermediate
+                let intermediate = i * j;
+                i * i + j * j - intermediate - intermediate
             }
 
             /// Calculate the cosine accumulators (3) between two SIMD lane-slices
@@ -476,7 +470,7 @@ macro_rules! impl_naive_int {
             fn cosine_acc(self, other: Self) -> [Self::Output; 3] {
                 self.iter()
                     .zip(other.iter())
-                    .map(|(&a, &b)| { (a as Self::Output, b as Self::Output)})
+                    .map(|(&a, &b)| (a as Self::Output, b as Self::Output))
                     .fold([0 as Self::Output; 3], |[xx, yy, xy], (a, b)| {
                         [a.mul_add(a, xx), b.mul_add(b, yy), a.mul_add(b, xy)]
                     })
@@ -505,9 +499,9 @@ macro_rules! impl_naive_int {
 
                 let mut sum = 0 as $ty2;
                 for i in 0..self.len() {
-                    let (x,y) = (self[i] as f32, other[i] as f32);
-                    let d = x-y;
-                    sum += d*d;
+                    let (x, y) = (self[i] as f32, other[i] as f32);
+                    let d = x - y;
+                    sum += d * d;
                 }
                 sum
             }
@@ -519,7 +513,7 @@ macro_rules! impl_naive_int {
             fn cosine_acc(self, other: Self) -> [Self::Output; 3] {
                 self.iter()
                     .zip(other.iter())
-                    .map(|(&a, &b)| { (a as Self::Output, b as Self::Output)})
+                    .map(|(&a, &b)| (a as Self::Output, b as Self::Output))
                     .fold([0 as Self::Output; 3], |[xx, yy, xy], (a, b)| {
                         [a.mul_add(a, xx), b.mul_add(b, yy), a.mul_add(b, xy)]
                     })
