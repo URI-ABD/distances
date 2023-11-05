@@ -268,8 +268,18 @@ macro_rules! impl_distances_int {
             pub fn euclidean_inner(a: &[$ty], b: &[$ty]) -> $name {
                 let i = $name::from_slice(a);
                 let j = $name::from_slice(b);
-                let u = i - j;
-                u * u
+                /*
+                    Typically we'd just compute (i-j)^2 here but i-j itself
+                    can be negative even if the metric can't. Therefore we
+                    break it up into two computations that are nonnegative.
+                    
+                    This is only important if $ty is unsigned.
+
+                    TODO (OWM): Can we bring the # of math ops down here?
+                        - Total is (3 muls, 3 add/sub) = 6
+                */
+                let intermediate = i*j;
+                i*i + j*j - intermediate - intermediate
             }
 
             /// Calculate the cosine accumulators (3) between two SIMD lane-slices
@@ -453,8 +463,8 @@ macro_rules! impl_naive_int {
 
                 let mut sum = 0 as Self::Output;
                 for i in 0..self.len() {
-                    let d = self[i] - other[i];
-                    sum += (d * d) as Self::Output;
+                    let d = self[i] as Self::Output - other[i] as Self::Output;
+                    sum += (d * d);
                 }
                 sum
             }
@@ -495,8 +505,9 @@ macro_rules! impl_naive_int {
 
                 let mut sum = 0 as $ty2;
                 for i in 0..self.len() {
-                    let d = self[i] - other[i];
-                    sum += (d * d) as $ty2;
+                    let (x,y) = (self[i] as f32, other[i] as f32);
+                    let d = x-y;
+                    sum += d*d;
                 }
                 sum
             }
