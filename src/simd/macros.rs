@@ -1,7 +1,7 @@
 macro_rules! define_ty {
     ($id:ident, $($elem_tys:ident),+) => {
         #[derive(Copy, Clone, PartialEq, Debug)]
-        #[allow(non_camel_case_types)]
+        #[allow(non_camel_case_types, clippy::derive_partial_eq_without_eq)]
         pub struct $id($($elem_tys),*);
     }
 }

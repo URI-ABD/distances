@@ -19,7 +19,7 @@ impl U32x16 {
         )
     }
 
-    pub fn horizontal_add(self) -> u32 {
+    pub const fn horizontal_add(self) -> u32 {
         self.0
             + self.1
             + self.2
