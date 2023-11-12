@@ -16,7 +16,7 @@ impl U32x8 {
         )
     }
 
-    pub fn horizontal_add(self) -> u32 {
+    pub const fn horizontal_add(self) -> u32 {
         self.0 + self.1 + self.2 + self.3 + self.4 + self.5 + self.6 + self.7
     }
 }
@@ -30,4 +30,4 @@ impl_op8!(assn AddAssign, add_assign, U32x8, +=);
 impl_op8!(Sub, sub, U32x8, -);
 impl_op8!(assn SubAssign, sub_assign, U32x8, -=);
 
-impl_distances_int!(U32x8, u32, f32);
+impl_distances_uint!(U32x8, u32, f32);

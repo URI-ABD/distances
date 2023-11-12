@@ -401,19 +401,23 @@ mod test {
             }
         }
 
-        // #[test]
-        // fn verify_random() {
-        //     use symagen::random_data;
+        #[test]
+        fn verify_random() {
+            use symagen::random_data;
 
-        //     let input_sizes = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
+            let input_sizes = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
 
-        //     for i in input_sizes {
-        //         let data = random_data::random_tabular_seedable(2, i, 0_u32, 20, 42);
-        //         let (a, b) = (&data[0], &data[1]);
+            for i in input_sizes {
+                let data = random_data::random_tabular_seedable(2, i, 0_u32, 20, 42);
+                let (a, b) = (&data[0], &data[1]);
 
-        //         assert_eq!(vector_euclidean(a, b), scalar_euclidean(a, b), "failed on iter {i}");
-        //     }
-        // }
+                assert_eq!(
+                    vector_euclidean(a, b),
+                    scalar_euclidean(a, b),
+                    "failed on iter {i}"
+                );
+            }
+        }
 
         #[test]
         fn smoke_mul() {

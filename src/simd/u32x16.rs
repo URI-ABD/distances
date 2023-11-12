@@ -48,4 +48,4 @@ impl_op16!(assn AddAssign, add_assign, U32x16, +=);
 impl_op16!(Sub, sub, U32x16, -);
 impl_op16!(assn SubAssign, sub_assign, U32x16, -=);
 
-impl_distances_int!(U32x16, u32, f32);
+impl_distances_uint!(U32x16, u32, f32);

@@ -14,7 +14,7 @@ impl U32x4 {
         Self(slice[0], slice[1], slice[2], slice[3])
     }
 
-    pub fn horizontal_add(self) -> u32 {
+    pub const fn horizontal_add(self) -> u32 {
         self.0 + self.1 + self.2 + self.3
     }
 }
@@ -28,4 +28,4 @@ impl_op4!(assn AddAssign, add_assign, U32x4, +=);
 impl_op4!(Sub, sub, U32x4, -);
 impl_op4!(assn SubAssign, sub_assign, U32x4, -=);
 
-impl_distances_int!(U32x4, u32, f32);
+impl_distances_uint!(U32x4, u32, f32);

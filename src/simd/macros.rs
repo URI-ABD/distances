@@ -260,20 +260,21 @@ macro_rules! impl_distances {
     };
 }
 
-macro_rules! impl_distances_int {
+macro_rules! impl_distances_uint {
     ($name:ident, $ty:ty, $out:ty) => {
         use super::Naive;
         impl $name {
             /// Calculate the squared distance between two SIMD lane-slices
             pub fn euclidean_inner(a: &[$ty], b: &[$ty]) -> $name {
-                let i = $name::from_slice(a);
-                let j = $name::from_slice(b);
-                /*
-                    This overflows on multiplications often because
-                    (i-j)^2 might fit into a u32 but i*j wont
-                */
-                let intermediate = i * j;
-                i * i + j * j - intermediate - intermediate
+                // Allocating here sucks but we only have to allocate one $name as a result
+                // This will definately introduce a perf overhead
+                let diffed: Vec<$ty> = (a.iter().zip(b))
+                    .map(|(x, y)| (x.max(y) - x.min(y)))
+                    .collect();
+
+                let u = $name::from_slice(&diffed);
+
+                u * u
             }
 
             /// Calculate the cosine accumulators (3) between two SIMD lane-slices
