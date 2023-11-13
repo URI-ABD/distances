@@ -267,14 +267,11 @@ macro_rules! impl_distances_uint {
             /// Calculate the squared distance between two SIMD lane-slices
             pub fn euclidean_inner(a: &[$ty], b: &[$ty]) -> $name {
                 // Allocating here sucks but we only have to allocate one $name as a result
-                // This will definately introduce a perf overhead
                 let diffed: Vec<$ty> = (a.iter().zip(b))
-                    .map(|(x, y)| (x.max(y) - x.min(y)))
+                    .map(|(x, y)| (x.max(y) - x.min(y)).pow(2))
                     .collect();
 
-                let u = $name::from_slice(&diffed);
-
-                u * u
+                $name::from_slice(&diffed)
             }
 
             /// Calculate the cosine accumulators (3) between two SIMD lane-slices
