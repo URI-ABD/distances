@@ -29,6 +29,18 @@ pub fn euclidean_sq_f64(a: &[f64], b: &[f64]) -> f64 {
     Vectorized::squared_euclidean(a, b)
 }
 
+/// Computes the euclidean distance between two vectors.
+#[must_use]
+pub fn euclidean_u32(a: &[u32], b: &[u32]) -> f32 {
+    Vectorized::euclidean(a, b)
+}
+
+/// Computes the euclidean distance between two vectors.
+#[must_use]
+pub fn euclidean_sq_u32(a: &[u32], b: &[u32]) -> f32 {
+    Vectorized::squared_euclidean(a, b)
+}
+
 /// Computes the cosine distance between two vectors.
 #[must_use]
 pub fn cosine_f32(a: &[f32], b: &[f32]) -> f32 {
@@ -38,6 +50,12 @@ pub fn cosine_f32(a: &[f32], b: &[f32]) -> f32 {
 /// Computes the cosine distance between two vectors.
 #[must_use]
 pub fn cosine_f64(a: &[f64], b: &[f64]) -> f64 {
+    Vectorized::cosine(a, b)
+}
+
+/// Computes the cosine distance between two vectors.
+#[must_use]
+pub fn cosine_u32(a: &[u32], b: &[u32]) -> f32 {
     Vectorized::cosine(a, b)
 }
 
