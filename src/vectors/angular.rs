@@ -60,6 +60,58 @@ pub fn cosine<T: Number, U: Float>(x: &[T], y: &[T]) -> U {
     }
 }
 
+/// Computes the Cosine distance between two normed vectors.
+///
+/// The cosine distance is defined as `1.0 - c` where `c` is the cosine
+/// similarity.
+///
+/// The cosine similarity is defined as the dot product of the two vectors
+/// divided by the product of their magnitudes. This function assumes
+/// the vectors are already normalized, so the division is unnecessary.
+///
+/// See the [`crate::vectors`] module documentation for information on this
+/// function's potentially unexpected behaviors
+///
+/// # Arguments
+///
+/// * `x`: A slice of numbers, normalized.
+/// * `y`: A slice of numbers, normalized.
+///
+/// # Examples
+///
+/// ```
+/// use distances::vectors::cosine_normed;
+///
+/// let x: Vec<f32> = vec![1.0, 0.0, 0.0];
+/// let y: Vec<f32> = vec![0.0, 1.0, 0.0];
+///
+/// let distance: f32 = cosine_normed(&x, &y);
+///
+/// assert!((distance - 1.0).abs() < f32::EPSILON);
+/// ```
+///
+/// # References
+///
+/// * [Cosine similarity](https://en.wikipedia.org/wiki/Cosine_similarity)
+pub fn cosine_normed<T: Number, U: Float>(x: &[T], y: &[T]) -> U {
+    let xy = x
+        .iter()
+        .zip(y.iter())
+        .fold(T::zero(), |xy, (&a, &b)| a.mul_add(b, xy));
+    let xy = U::from(xy);
+
+    if xy < U::epsilon() {
+        U::one()
+    } else {
+        let d = U::one() - xy;
+        if d < U::epsilon() {
+            U::zero()
+        } else {
+            d
+        }
+    }
+}
+
 /// Computes the Hamming distance between two vectors.
 ///
 /// The Hamming distance is defined as the number of positions at which

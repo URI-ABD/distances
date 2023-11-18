@@ -1,9 +1,10 @@
+use distances::Number;
 use symagen::random_data;
 use test_case::test_case;
 
 use distances::{
     simd,
-    vectors::{cosine, euclidean, euclidean_sq},
+    vectors::{cosine, cosine_normed, euclidean, euclidean_sq},
 };
 
 fn gen_data_f32(seed: u64) -> Vec<Vec<f32>> {
@@ -18,6 +19,63 @@ fn gen_data_f64(seed: u64) -> Vec<Vec<f64>> {
     let (min_val, max_val) = (-10., 10.);
 
     random_data::random_f64(cardinality, dimensionality, min_val, max_val, seed)
+}
+
+fn normalize<T: Number>(vals: &[T]) -> Vec<T> {
+    let magnitude = vals.iter().cloned().sum();
+    vals.iter().map(|&v| v / magnitude).collect()
+}
+
+#[test_case(cosine_normed, simd::cosine_normed_f32; "cosine_normed_f32")]
+fn simd_distances_normed_f32(naive: fn(&[f32], &[f32]) -> f32, simd: fn(&[f32], &[f32]) -> f32) {
+    let data_x: Vec<Vec<f32>> = gen_data_f32(42).iter().map(|v| normalize(v)).collect();
+    let data_y: Vec<Vec<f32>> = gen_data_f32(65).iter().map(|v| normalize(v)).collect();
+    let mut failures = Vec::new();
+
+    for (i, x) in data_x.iter().enumerate() {
+        for (j, y) in data_y.iter().enumerate() {
+            let expected: f32 = naive(x, y);
+            let actual: f32 = simd(x, y);
+            let delta = (expected - actual).abs();
+            let threshold = 1e-5 * actual;
+            if delta > threshold {
+                failures.push((i, j, delta, threshold));
+            }
+        }
+    }
+
+    assert!(
+        failures.is_empty(),
+        "{} non-empty failures, {:?} ...",
+        failures.len(),
+        &failures[..5]
+    );
+}
+
+#[test_case(cosine_normed, simd::cosine_normed_f64; "cosine_normed_f64")]
+fn simd_distances_normed_f64(naive: fn(&[f64], &[f64]) -> f64, simd: fn(&[f64], &[f64]) -> f64) {
+    let data_x: Vec<Vec<f64>> = gen_data_f64(42).iter().map(|v| normalize(v)).collect();
+    let data_y: Vec<Vec<f64>> = gen_data_f64(65).iter().map(|v| normalize(v)).collect();
+    let mut failures = Vec::new();
+
+    for (i, x) in data_x.iter().enumerate() {
+        for (j, y) in data_y.iter().enumerate() {
+            let expected: f64 = naive(x, y);
+            let actual: f64 = simd(x, y);
+            let delta = (expected - actual).abs();
+            let threshold = 1e-10 * actual;
+            if delta > threshold {
+                failures.push((i, j, delta, threshold));
+            }
+        }
+    }
+
+    assert!(
+        failures.is_empty(),
+        "{} non-empty failures, {:?} ...",
+        failures.len(),
+        &failures[..5]
+    );
 }
 
 #[test_case(euclidean_sq, simd::euclidean_sq_f32; "euclidean_sq_f32")]

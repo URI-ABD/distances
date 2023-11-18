@@ -41,6 +41,18 @@ pub fn cosine_f64(a: &[f64], b: &[f64]) -> f64 {
     Vectorized::cosine(a, b)
 }
 
+/// Computes the cosine distance between two normed vectors.
+#[must_use]
+pub fn cosine_normed_f32(a: &[f32], b: &[f32]) -> f32 {
+    Vectorized::cosine_normed(a, b)
+}
+
+/// Computes the cosine distance between two normed vectors.
+#[must_use]
+pub fn cosine_normed_f64(a: &[f64], b: &[f64]) -> f64 {
+    Vectorized::cosine_normed(a, b)
+}
+
 #[macro_use]
 mod macros;
 
@@ -67,6 +79,8 @@ pub(crate) trait Naive {
     fn euclidean(self, other: Self) -> Self::Output;
     fn cosine(self, other: Self) -> Self::Output;
     fn cosine_acc(self, other: Self) -> [Self::Output; 3];
+    fn cosine_normed(self, other: Self) -> Self::Output;
+    fn cosine_acc_normed(self, other: Self) -> Self::Output;
 }
 
 pub(crate) trait Vectorized {
@@ -74,6 +88,7 @@ pub(crate) trait Vectorized {
     fn squared_euclidean(self, other: Self) -> Self::Output;
     fn euclidean(self, other: Self) -> Self::Output;
     fn cosine(self, other: Self) -> Self::Output;
+    fn cosine_normed(self, other: Self) -> Self::Output;
 }
 
 impl_naive!(f64, f64);
@@ -122,6 +137,14 @@ impl Vectorized for &[f32] {
             F32x4::cosine(self, other)
         }
     }
+
+    fn cosine_normed(self, other: Self) -> Self::Output {
+        if self.len() >= 64 {
+            F32x8::cosine_normed(self, other)
+        } else {
+            F32x4::cosine_normed(self, other)
+        }
+    }
 }
 
 impl Vectorized for &Vec<f32> {
@@ -143,6 +166,14 @@ impl Vectorized for &Vec<f32> {
             F32x8::cosine(self, other)
         } else {
             F32x4::cosine(self, other)
+        }
+    }
+
+    fn cosine_normed(self, other: Self) -> Self::Output {
+        if self.len() >= 64 {
+            F32x8::cosine_normed(self, other)
+        } else {
+            F32x4::cosine_normed(self, other)
         }
     }
 }
@@ -168,6 +199,14 @@ impl Vectorized for &[f64] {
             F64x2::cosine(self, other)
         }
     }
+
+    fn cosine_normed(self, other: Self) -> Self::Output {
+        if self.len() >= 16 {
+            F64x4::cosine_normed(self, other)
+        } else {
+            F64x2::cosine_normed(self, other)
+        }
+    }
 }
 
 impl Vectorized for &Vec<f64> {
@@ -189,6 +228,14 @@ impl Vectorized for &Vec<f64> {
             F64x4::cosine(self, other)
         } else {
             F64x2::cosine(self, other)
+        }
+    }
+
+    fn cosine_normed(self, other: Self) -> Self::Output {
+        if self.len() >= 16 {
+            F64x4::cosine_normed(self, other)
+        } else {
+            F64x2::cosine_normed(self, other)
         }
     }
 }

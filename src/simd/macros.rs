@@ -183,6 +183,13 @@ macro_rules! impl_distances {
                 [i * i, j * j, i * j]
             }
 
+            /// Calculate the cosine-normed accumulator between two SIMD lane-slices
+            pub fn cosine_inner_normed(a: &[$ty], b: &[$ty]) -> $name {
+                let i = $name::from_slice(a);
+                let j = $name::from_slice(b);
+                i * j
+            }
+
             /// Calculate euclidean distance between two slices of equal length,
             /// using auto-vectorized SIMD primitives
             pub fn squared_euclidean(a: &[$ty], b: &[$ty]) -> $ty {
@@ -256,6 +263,45 @@ macro_rules! impl_distances {
                     }
                 }
             }
+
+            pub fn cosine_acc_normed(a: &[$ty], b: &[$ty]) -> $ty {
+                assert_eq!(a.len(), b.len());
+                if a.len() < $name::lanes() {
+                    return Naive::cosine_acc_normed(a, b);
+                }
+                let mut i = 0;
+                let mut xy = $name::splat(0 as $ty);
+                while a.len() - $name::lanes() >= i {
+                    let xys = $name::cosine_inner_normed(
+                        &a[i..i + $name::lanes()],
+                        &b[i..i + $name::lanes()],
+                    );
+
+                    xy += xys;
+                    i += $name::lanes();
+                }
+
+                let mut xysum = xy.horizontal_add();
+                if i < a.len() {
+                    let xys = Naive::cosine_acc_normed(&a[i..], &b[i..]);
+                    xysum += xys;
+                }
+                xysum
+            }
+            pub fn cosine_normed(a: &[$ty], b: &[$ty]) -> $ty {
+                let xy = $name::cosine_acc_normed(a, b);
+                let eps = <$ty>::EPSILON;
+                if xy < eps {
+                    1 as $ty
+                } else {
+                    let d = 1 as $ty - xy;
+                    if d < eps {
+                        0 as $ty
+                    } else {
+                        d
+                    }
+                }
+            }
         }
     };
 }
@@ -302,7 +348,29 @@ macro_rules! impl_naive {
                     }
                 }
             }
+
+            fn cosine_acc_normed(self, other: Self) -> Self::Output {
+                self.iter()
+                    .zip(other.iter())
+                    .fold(0 as Self::Output, |xy, (&a, &b)| a.mul_add(b, xy))
+            }
+
+            fn cosine_normed(self, other: Self) -> Self::Output {
+                let xy = Naive::cosine_acc_normed(self, other);
+                let eps = Self::Output::EPSILON;
+                if xy < eps {
+                    1 as Self::Output
+                } else {
+                    let d = 1 as Self::Output - xy;
+                    if d < eps {
+                        0 as Self::Output
+                    } else {
+                        d
+                    }
+                }
+            }
         }
+
         impl Naive for &Vec<$ty1> {
             type Output = $ty2;
             type Ty = $ty1;
@@ -336,6 +404,27 @@ macro_rules! impl_naive {
                     1 as Self::Output
                 } else {
                     let d = 1 as Self::Output - xy / (xx * yy).sqrt();
+                    if d < eps {
+                        0 as Self::Output
+                    } else {
+                        d
+                    }
+                }
+            }
+
+            fn cosine_acc_normed(self, other: Self) -> Self::Output {
+                self.iter()
+                    .zip(other.iter())
+                    .fold(0 as Self::Output, |xy, (&a, &b)| a.mul_add(b, xy))
+            }
+
+            fn cosine_normed(self, other: Self) -> Self::Output {
+                let xy = Naive::cosine_acc_normed(self, other);
+                let eps = Self::Output::EPSILON;
+                if xy < eps {
+                    1 as Self::Output
+                } else {
+                    let d = 1 as Self::Output - xy;
                     if d < eps {
                         0 as Self::Output
                     } else {
