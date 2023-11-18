@@ -1,6 +1,6 @@
 [package]
 name = "distances"
-version = "1.5.0"
+version = "1.6.2"
 authors = [
     "Najib Ishaq <najib_ishaq@zoho.com>",
     "Noah Daniels <noah_daniels@uri.edu>",
@@ -17,11 +17,13 @@ readme = "README.md"
 publish = true
 
 [dependencies]
+rand = "0.8.5"
 # libm = "0.2.7"  # no-std
 
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }
-symagen = { version = "0.1.1", path = "../SyMaGen" }
+symagen = "0.2.1"
+# symagen = { version = "0.2.0", path = "../SyMaGen" }
 test-case = "3.2.1"
 
 [[bench]]
@@ -46,4 +48,8 @@ harness = false
 
 [[bench]]
 name = "simd-euclidean"
+harness = false
+
+[[bench]]
+name = "simd-cosine"
 harness = false

@@ -93,6 +93,18 @@ pub trait Number:
     fn type_name<'a>() -> &'a str {
         core::any::type_name::<Self>()
     }
+
+    /// Returns the epsilon value for the type.
+    ///
+    /// For floating point types, this is the difference between 1.0 and the next
+    /// largest representable number.
+    ///
+    /// For integer types, this is 0.
+    #[must_use]
+    fn epsilon() -> Self;
+
+    /// Returns a random `Number`.
+    fn next_random<R: rand::Rng>(rng: &mut R) -> Self;
 }
 
 impl Number for f32 {
@@ -172,6 +184,14 @@ impl Number for f32 {
 
     fn to_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
+    }
+
+    fn epsilon() -> Self {
+        Self::EPSILON
+    }
+
+    fn next_random<R: rand::Rng>(rng: &mut R) -> Self {
+        rng.gen()
     }
 }
 
@@ -253,6 +273,14 @@ impl Number for f64 {
     fn to_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
     }
+
+    fn epsilon() -> Self {
+        Self::EPSILON
+    }
+
+    fn next_random<R: rand::Rng>(rng: &mut R) -> Self {
+        rng.gen()
+    }
 }
 
 /// A macro to implement the `Number` trait for primitive types.
@@ -330,6 +358,14 @@ macro_rules! impl_number_iint {
 
                 fn to_be_bytes(self) -> Vec<u8> {
                     self.to_be_bytes().to_vec()
+                }
+
+                fn epsilon() -> Self {
+                    0
+                }
+
+                fn next_random<R: rand::Rng>(rng: &mut R) -> Self {
+                    rng.gen()
                 }
             }
         )*
@@ -413,6 +449,14 @@ macro_rules! impl_number_uint {
 
                 fn to_be_bytes(self) -> Vec<u8> {
                     self.to_be_bytes().to_vec()
+                }
+
+                fn epsilon() -> Self {
+                    0
+                }
+
+                fn next_random<R: rand::Rng>(rng: &mut R) -> Self {
+                    rng.gen()
                 }
             }
         )*

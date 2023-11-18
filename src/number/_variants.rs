@@ -61,7 +61,7 @@ macro_rules! impl_uint {
 impl_uint!(u8, u16, u32, u64, u128, usize);
 
 /// Sub-trait of `Number` for all floating point types.
-pub trait Float: Number {
+pub trait Float: Number + core::ops::Neg<Output = Self> {
     /// Returns the square root of a `Float`.
     #[must_use]
     fn sqrt(self) -> Self;
@@ -69,9 +69,6 @@ pub trait Float: Number {
     /// Returns the cube root of a `Float`.
     #[must_use]
     fn cbrt(self) -> Self;
-
-    /// Returns the machine epsilon for a `Float`.
-    fn epsilon() -> Self;
 
     /// Returns the inverse square root of a `Float`, i.e. `1.0 / self.sqrt()`.
     #[must_use]
@@ -95,10 +92,6 @@ macro_rules! impl_float {
 
                 fn cbrt(self) -> Self {
                     Self::cbrt(self)
-                }
-
-                fn epsilon() -> Self {
-                    Self::EPSILON
                 }
 
                 fn powf(self, exp: Self) -> Self {
