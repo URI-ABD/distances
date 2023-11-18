@@ -6,7 +6,7 @@ use distances::simd;
 use distances::vectors::cosine as cosine_generic;
 
 fn simd_f32(c: &mut Criterion) {
-    let mut group = c.benchmark_group("SimdF32");
+    let mut group = c.benchmark_group("SimdCosF32");
 
     let (cardinality, min_val, max_val) = (2, -10.0, 10.0);
 
@@ -34,7 +34,7 @@ fn simd_f32(c: &mut Criterion) {
 }
 
 fn simd_f64(c: &mut Criterion) {
-    let mut group = c.benchmark_group("SimdF64");
+    let mut group = c.benchmark_group("SimdCosF64");
 
     let (cardinality, min_val, max_val) = (2, -10.0, 10.0);
 

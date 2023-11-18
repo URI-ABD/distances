@@ -49,3 +49,7 @@ harness = false
 [[bench]]
 name = "simd-euclidean"
 harness = false
+
+[[bench]]
+name = "simd-cosine"
+harness = false
