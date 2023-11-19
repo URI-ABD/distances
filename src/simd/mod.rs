@@ -409,6 +409,15 @@ mod test {
                     U32x8::euclidean(x, y),
                     res
                 );
+
+                assert!(
+                    (U32x16::euclidean(x, y) - res).abs() < 0.0001,
+                    "iter {}, {} != {}",
+                    i,
+                    U32x16::euclidean(x, y),
+                    res
+                );
+
                 assert!(
                     (U32x4::euclidean(x, y) - res).abs() < 0.0001,
                     "iter {}, {} != {}",
@@ -425,14 +434,18 @@ mod test {
 
             let input_sizes = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
 
+            use rand::Rng;
+            let mut rng = rand::thread_rng();
+
             for i in input_sizes {
-                let data = random_data::random_tabular_seedable(2, i, 0_u32, 20, 42);
+                let seed = rng.gen();
+                let data = random_data::random_tabular_seedable(2, i, 0_u32, 20, seed);
                 let (a, b) = (&data[0], &data[1]);
 
                 assert_eq!(
                     vector_euclidean(a, b),
                     scalar_euclidean(a, b),
-                    "failed on iter {i}"
+                    "failed on iter {i} with seed {seed}"
                 );
             }
         }
