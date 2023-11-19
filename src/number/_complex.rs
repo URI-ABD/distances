@@ -30,9 +30,9 @@ macro_rules! impl_cart_complex {
                 let (CartComplex(a, b), CartComplex(c, d)) = (self, rhs);
                 // Clippy suggested we turn the following into:
                 //     CartComplex(a.mul_add(c, -b * d), a.mul_add(d, b * c))
-                // but this was causing really bad precision errors (on the order of +/-128!!)
-                // This may just be because the underlying intrinsic `fmaf32` is just bad on
-                // my laptop.
+                // but this was causing really bad precision errors (on the order of +/-128.
+                // Always seems to be a power of 2?) This may just be because the underlying
+                // intrinsic `fmaf32` is just bad on my laptop. This happens in release or debug.
                 #[allow(clippy::suboptimal_flops)]
                 CartComplex(a * c - b * d, a * d + b * c)
             }
@@ -96,10 +96,7 @@ macro_rules! impl_polar_complex {
             type Output = PolarComplex<$t>;
 
             fn add(self, rhs: Self) -> Self::Output {
-                let lhs_cart = CartComplex::<$t>::from_polar(self);
-                let rhs_cart = CartComplex::<$t>::from_polar(rhs);
-
-                let res = lhs_cart + rhs_cart;
+                let res = CartComplex::<$t>::from_polar(self) + CartComplex::<$t>::from_polar(rhs);
 
                 Self::from_cartesian(res)
             }
@@ -185,95 +182,96 @@ mod tests {
     use rand::Rng;
 
     fn approx_eq_cart(lhs: &CartComplex<f32>, rhs: &CartComplex<f32>) -> bool {
-        approx_eq!(f32, lhs.0, rhs.0) && approx_eq!(f32, lhs.1, rhs.1, epsilon = 0.001)
+        approx_eq!(f32, lhs.0, rhs.0) && approx_eq!(f32, lhs.1, rhs.1)
     }
 
     fn approx_eq_polar(lhs: &PolarComplex<f32>, rhs: &PolarComplex<f32>) -> bool {
         approx_eq!(f32, lhs.0, rhs.0) && approx_eq!(f32, lhs.1, rhs.1)
     }
 
-    #[test]
-    fn basic() {
-        let neg1: CartComplex<f32> = CartComplex(0.0, 1.0);
-        let squared: CartComplex<f32> = neg1 * neg1;
-        assert!(approx_eq_cart(&squared, &CartComplex(-1.0, 0.0)));
-    }
+    mod cartesian {
+        use super::*;
 
-    #[test]
-    fn random_identity_verification() {
-        let mut rng = rand::thread_rng();
-
-        for _ in 0..100 {
-            let (a, b, c, d) = (
-                rng.gen_range(-1000..1000) as f32 / 0.01,
-                rng.gen_range(-1000..1000) as f32 / 0.01,
-                rng.gen_range(-1000..1000) as f32 / 0.01,
-                rng.gen_range(-1000..1000) as f32 / 0.01,
-            );
-
-            assert_identities_cart(a, b, c, d);
+        #[test]
+        fn basic() {
+            let neg1: CartComplex<f32> = CartComplex(0.0, 1.0);
+            let squared: CartComplex<f32> = neg1 * neg1;
+            assert!(approx_eq_cart(&squared, &CartComplex(-1.0, 0.0)));
         }
-    }
 
-    fn assert_identities_cart(a: f32, b: f32, c: f32, d: f32) {
-        let z = CartComplex(a, b);
-        let w = CartComplex(c, d);
+        #[test]
+        fn random_identity_verification() {
+            let mut rng = rand::thread_rng();
 
-        // z + \bar{z} = 2Re(z);
-        let want = CartComplex(2.0 * z.re(), 0.0);
-        let got = z + z.conj();
-        assert!(approx_eq_cart(&want, &got));
+            for _ in 0..100 {
+                let (a, b, c, d) = (
+                    rng.gen_range(-1000..1000) as f32 / 0.01,
+                    rng.gen_range(-1000..1000) as f32 / 0.01,
+                    rng.gen_range(-1000..1000) as f32 / 0.01,
+                    rng.gen_range(-1000..1000) as f32 / 0.01,
+                );
 
-        // z - \bar{z} = 2(Im(z))i;
-        let want = CartComplex(0.0, 2.0 * z.im());
-        let got = z + (-1.0) * z.conj();
+                assert_identities_cart(a, b, c, d);
+            }
+        }
 
-        assert!(approx_eq_cart(&want, &got));
+        fn assert_identities_cart(a: f32, b: f32, c: f32, d: f32) {
+            let z = CartComplex(a, b);
+            let w = CartComplex(c, d);
 
-        // z\bar{z} = |z|^2;
-        let want = CartComplex(z.norm().powi(2), 0.0);
-        let got = z * z.conj();
+            // z + \bar{z} = 2Re(z);
+            let want = CartComplex(2.0 * z.re(), 0.0);
+            let got = z + z.conj();
+            assert!(approx_eq_cart(&want, &got));
 
-        dbg!(&want, &got);
-        assert!(approx_eq_cart(&want, &got));
+            // z - \bar{z} = 2(Im(z))i;
+            let want = CartComplex(0.0, 2.0 * z.im());
+            let got = z + (-1.0) * z.conj();
 
-        // \bar{w + z} = \bar{w} + \bar{z}
-        let want = (w + z).conj();
-        let got = w.conj() + z.conj();
+            assert!(approx_eq_cart(&want, &got));
 
-        assert!(approx_eq_cart(&want, &got));
+            // z\bar{z} = |z|^2;
+            let want = CartComplex(z.norm().powi(2), 0.0);
+            let got = z * z.conj();
 
-        // \bar{wz} = \bar{w}\bar{z};
-        let want = (w * z).conj();
-        let got = w.conj() * z.conj();
+            dbg!(&want, &got);
+            assert!(approx_eq_cart(&want, &got));
 
-        assert!(approx_eq_cart(&want, &got));
+            // \bar{w + z} = \bar{w} + \bar{z}
+            let want = (w + z).conj();
+            let got = w.conj() + z.conj();
 
-        // \bar{\bar{z}} = z;
-        let want = z;
-        let got = z.conj().conj();
+            assert!(approx_eq_cart(&want, &got));
 
-        assert!(approx_eq_cart(&want, &got));
+            // \bar{wz} = \bar{w}\bar{z};
+            let want = (w * z).conj();
+            let got = w.conj() * z.conj();
 
-        // |Re(z)| \le |z| and |Im(z)| \le |z|;
-        assert!(z.re().abs() <= z.norm());
-        assert!(z.im().abs() <= z.norm());
+            assert!(approx_eq_cart(&want, &got));
 
-        // |\bar{z}| = |z|
-        assert!(approx_eq!(f32, z.conj().norm(), z.norm()));
+            // \bar{\bar{z}} = z;
+            let want = z;
+            let got = z.conj().conj();
 
-        // |wz| = |w||z|;
-        assert!(approx_eq!(f32, (w * z).norm(), w.norm() * z.norm()));
+            assert!(approx_eq_cart(&want, &got));
 
-        // |w + z| \le |w| + |z|;
-        assert!((w + z).norm() <= w.norm() + z.norm());
+            // |Re(z)| \le |z| and |Im(z)| \le |z|;
+            assert!(z.re().abs() <= z.norm());
+            assert!(z.im().abs() <= z.norm());
+
+            // |\bar{z}| = |z|
+            assert!(approx_eq!(f32, z.conj().norm(), z.norm()));
+
+            // |wz| = |w||z|;
+            assert!(approx_eq!(f32, (w * z).norm(), w.norm() * z.norm()));
+
+            // |w + z| \le |w| + |z|;
+            assert!((w + z).norm() <= w.norm() + z.norm());
+        }
     }
 
     mod polar {
         use super::*;
-
-        // Define a small epsilon for floating-point comparisons
-        const EPSILON: f32 = 1e-6;
 
         #[test]
         fn test_addition() {
@@ -330,7 +328,7 @@ mod tests {
             let result = z.norm();
             let expected = 3.0;
 
-            assert!(approx_eq!(f32, result, expected, epsilon = EPSILON));
+            assert!(approx_eq!(f32, result, expected, epsilon = 1e-6));
         }
     }
 }
