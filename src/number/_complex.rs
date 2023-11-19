@@ -29,8 +29,10 @@ macro_rules! impl_cart_complex {
             fn mul(self, rhs: Self) -> Self::Output {
                 let (CartComplex(a, b), CartComplex(c, d)) = (self, rhs);
                 // Clippy suggested we turn the following into:
-                // CartComplex(a.mul_add(c, -b * d), a.mul_add(d, b * c))
+                //     CartComplex(a.mul_add(c, -b * d), a.mul_add(d, b * c))
                 // but this was causing really bad precision errors (on the order of +/-128!!)
+                // This may just be because the underlying intrinsic `fmaf32` is just bad on
+                // my laptop.
                 #[allow(clippy::suboptimal_flops)]
                 CartComplex(a * c - b * d, a * d + b * c)
             }
