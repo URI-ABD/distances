@@ -9,7 +9,8 @@ mod _bool;
 mod _number;
 mod _variants;
 
-///
+/// Implements logic for complex numbers and their operations in both polar and cartesian
+/// form.
 mod _complex;
 
 pub use _bool::Bool;
