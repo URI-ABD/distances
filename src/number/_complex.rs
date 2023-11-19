@@ -14,166 +14,167 @@ pub struct PolarComplex<T>(T, T);
 
 /// Implements the logic and functionality for cartesian complex numbers
 macro_rules! impl_cart_complex {
-    ($t:ty) => {
-        impl Add for CartComplex<$t> {
-            type Output = CartComplex<$t>;
+    ($($ty:ty),*) => {
+        $(
+            impl Add for CartComplex<$ty> {
+                type Output = CartComplex<$ty>;
 
-            fn add(self, rhs: Self) -> Self::Output {
-                CartComplex(self.0 + rhs.0, self.1 + rhs.1)
-            }
-        }
-
-        impl Mul for CartComplex<$t> {
-            type Output = CartComplex<$t>;
-
-            fn mul(self, rhs: Self) -> Self::Output {
-                let (CartComplex(a, b), CartComplex(c, d)) = (self, rhs);
-                // Clippy suggested we turn the following into:
-                //     CartComplex(a.mul_add(c, -b * d), a.mul_add(d, b * c))
-                // but this was causing really bad precision errors (on the order of +/-128.
-                // Always seems to be a power of 2?) This may just be because the underlying
-                // intrinsic `fmaf32` is just bad on my laptop. This happens in release or debug.
-                #[allow(clippy::suboptimal_flops)]
-                CartComplex(a * c - b * d, a * d + b * c)
-            }
-        }
-
-        impl Mul<CartComplex<$t>> for $t {
-            type Output = CartComplex<$t>;
-
-            fn mul(self, rhs: CartComplex<$t>) -> Self::Output {
-                let CartComplex(a, b) = rhs;
-                CartComplex(self * a, self * b)
-            }
-        }
-
-        impl CartComplex<$t> {
-            #[must_use]
-            /// Converts a polar form complex number to cartesian form
-            pub fn from_polar(polar: PolarComplex<$t>) -> Self {
-                let PolarComplex(r, theta) = polar;
-                CartComplex(r * <$t>::cos(theta), r * <$t>::sin(theta))
+                fn add(self, rhs: Self) -> Self::Output {
+                    CartComplex(self.0 + rhs.0, self.1 + rhs.1)
+                }
             }
 
-            #[must_use]
-            /// Converts a tuple of numbers to a complex number where the first index represents
-            /// the real part and the second represents the imaginary.
-            pub const fn from(a: $t, b: $t) -> Self {
-                CartComplex(a, b)
+            impl Mul for CartComplex<$ty> {
+                type Output = CartComplex<$ty>;
+
+                fn mul(self, rhs: Self) -> Self::Output {
+                    let (CartComplex(a, b), CartComplex(c, d)) = (self, rhs);
+                    // Clippy suggested we turn the following into:
+                    //     CartComplex(a.mul_add(c, -b * d), a.mul_add(d, b * c))
+                    // but this was causing really bad precision errors (on the order of +/-128.
+                    // Always seems to be a power of 2?) This may just be because the underlying
+                    // intrinsic `fmaf32` is just bad on my laptop. This happens in release or debug.
+                    #[allow(clippy::suboptimal_flops)]
+                    CartComplex(a * c - b * d, a * d + b * c)
+                }
             }
 
-            #[must_use]
-            /// Returns the real part of the complex number
-            pub const fn re(&self) -> $t {
-                self.0
+            impl Mul<CartComplex<$ty>> for $ty {
+                type Output = CartComplex<$ty>;
+
+                fn mul(self, rhs: CartComplex<$ty>) -> Self::Output {
+                    let CartComplex(a, b) = rhs;
+                    CartComplex(self * a, self * b)
+                }
             }
 
-            #[must_use]
-            /// Returns the imaginary part of the complex number
-            pub const fn im(&self) -> $t {
-                self.1
-            }
+            impl CartComplex<$ty> {
+                #[must_use]
+                /// Converts a polar form complex number to cartesian form
+                pub fn from_polar(polar: PolarComplex<$ty>) -> Self {
+                    let PolarComplex(r, theta) = polar;
+                    CartComplex(r * <$ty>::cos(theta), r * <$ty>::sin(theta))
+                }
 
-            #[must_use]
-            /// Returns the complex conjugate
-            pub fn conj(self) -> Self {
-                CartComplex(self.re(), -self.im())
-            }
+                #[must_use]
+                /// Converts a tuple of numbers to a complex number where the first index represents
+                /// the real part and the second represents the imaginary.
+                pub const fn from(a: $ty, b: $ty) -> Self {
+                    CartComplex(a, b)
+                }
 
-            #[must_use]
-            /// Returns the norm (absolute value, hypotenuse, magnitude) of the complex number
-            pub fn norm(&self) -> $t {
-                self.0.hypot(self.1)
+                #[must_use]
+                /// Returns the real part of the complex number
+                pub const fn re(&self) -> $ty {
+                    self.0
+                }
+
+                #[must_use]
+                /// Returns the imaginary part of the complex number
+                pub const fn im(&self) -> $ty {
+                    self.1
+                }
+
+                #[must_use]
+                /// Returns the complex conjugate
+                pub fn conj(self) -> Self {
+                    CartComplex(self.re(), -self.im())
+                }
+
+                #[must_use]
+                /// Returns the norm (absolute value, hypotenuse, magnitude) of the complex number
+                pub fn norm(&self) -> $ty {
+                    self.0.hypot(self.1)
+                }
             }
-        }
+        )*
     };
 }
 
 /// Implements the logic and functionality for polar complex numbers
 macro_rules! impl_polar_complex {
-    ($t:ty) => {
-        impl Add for PolarComplex<$t> {
-            type Output = PolarComplex<$t>;
+    ($($ty:ty),*) => {
+        $(
+            impl Add for PolarComplex<$ty> {
+                type Output = PolarComplex<$ty>;
 
-            fn add(self, rhs: Self) -> Self::Output {
-                let res = CartComplex::<$t>::from_polar(self) + CartComplex::<$t>::from_polar(rhs);
+                fn add(self, rhs: Self) -> Self::Output {
+                    let res = CartComplex::<$ty>::from_polar(self) + CartComplex::<$ty>::from_polar(rhs);
 
-                Self::from_cartesian(res)
-            }
-        }
-
-        impl Mul for PolarComplex<$t> {
-            type Output = PolarComplex<$t>;
-
-            fn mul(self, rhs: Self) -> Self::Output {
-                let PolarComplex(r1, theta1) = self;
-                let PolarComplex(r2, theta2) = rhs;
-
-                PolarComplex(r1 * r2, theta1 + theta2)
-            }
-        }
-
-        impl Mul<PolarComplex<$t>> for $t {
-            type Output = PolarComplex<$t>;
-
-            fn mul(self, rhs: PolarComplex<$t>) -> Self::Output {
-                let PolarComplex(r, theta) = rhs;
-                PolarComplex(self * r, theta)
-            }
-        }
-
-        impl PolarComplex<$t> {
-            #[must_use]
-            /// Converts a cartesian form complex number to polar form
-            pub fn from_cartesian(cart: CartComplex<$t>) -> Self {
-                let CartComplex(a, b) = cart;
-                let theta = (b / a).atan();
-                let r = cart.norm();
-
-                PolarComplex(r, theta)
+                    Self::from_cartesian(res)
+                }
             }
 
-            #[must_use]
-            /// Converts a tuple to a polar form complex number. (r, theta) -> r(cos(theta) + i*sin(theta))
-            pub const fn from(a: $t, b: $t) -> Self {
-                PolarComplex(a, b)
+            impl Mul for PolarComplex<$ty> {
+                type Output = PolarComplex<$ty>;
+
+                fn mul(self, rhs: Self) -> Self::Output {
+                    let PolarComplex(r1, theta1) = self;
+                    let PolarComplex(r2, theta2) = rhs;
+
+                    PolarComplex(r1 * r2, theta1 + theta2)
+                }
             }
 
-            #[must_use]
-            /// Returns the real part of the complex number
-            pub fn re(&self) -> $t {
-                let PolarComplex(r, theta) = self;
-                r * <$t>::cos(*theta)
+            impl Mul<PolarComplex<$ty>> for $ty {
+                type Output = PolarComplex<$ty>;
+
+                fn mul(self, rhs: PolarComplex<$ty>) -> Self::Output {
+                    let PolarComplex(r, theta) = rhs;
+                    PolarComplex(self * r, theta)
+                }
             }
 
-            #[must_use]
-            /// Returns the imaginary part of the complex number
-            pub fn im(&self) -> $t {
-                let PolarComplex(r, theta) = self;
-                r * <$t>::sin(*theta)
-            }
+            impl PolarComplex<$ty> {
+                #[must_use]
+                /// Converts a cartesian form complex number to polar form
+                pub fn from_cartesian(cart: CartComplex<$ty>) -> Self {
+                    let CartComplex(a, b) = cart;
+                    let theta = (b / a).atan();
+                    let r = cart.norm();
 
-            #[must_use]
-            /// Returns the complex conjugate
-            pub fn conj(self) -> Self {
-                let PolarComplex(r, theta) = self;
-                PolarComplex(r, -theta)
-            }
+                    PolarComplex(r, theta)
+                }
 
-            #[must_use]
-            /// Returns the norm (absolute value, hypotenuse, magnitude) of the complex number
-            pub const fn norm(&self) -> $t {
-                self.0
+                #[must_use]
+                /// Converts a tuple to a polar form complex number. (r, theta) -> r(cos(theta) + i*sin(theta))
+                pub const fn from(a: $ty, b: $ty) -> Self {
+                    PolarComplex(a, b)
+                }
+
+                #[must_use]
+                /// Returns the real part of the complex number
+                pub fn re(&self) -> $ty {
+                    let PolarComplex(r, theta) = self;
+                    r * <$ty>::cos(*theta)
+                }
+
+                #[must_use]
+                /// Returns the imaginary part of the complex number
+                pub fn im(&self) -> $ty {
+                    let PolarComplex(r, theta) = self;
+                    r * <$ty>::sin(*theta)
+                }
+
+                #[must_use]
+                /// Returns the complex conjugate
+                pub fn conj(self) -> Self {
+                    let PolarComplex(r, theta) = self;
+                    PolarComplex(r, -theta)
+                }
+
+                #[must_use]
+                /// Returns the norm (absolute value, hypotenuse, magnitude) of the complex number
+                pub const fn norm(&self) -> $ty {
+                    self.0
+                }
             }
-        }
-    };
+        )*
+    }
 }
 
-impl_cart_complex!(f32);
-impl_cart_complex!(f64);
-
-impl_polar_complex!(f32);
-impl_polar_complex!(f64);
+impl_cart_complex!(f32, f64);
+impl_polar_complex!(f32, f64);
 
 #[cfg(test)]
 mod tests {
