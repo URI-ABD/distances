@@ -10,6 +10,9 @@ mod _bool;
 mod _number;
 mod _variants;
 
+/// Implements complex number operations in polar and cartesian form.
+mod _complex;
+
 pub use _bool::Bool;
 pub use _number::Number;
 pub use _variants::{Float, IInt, Int, UInt};
