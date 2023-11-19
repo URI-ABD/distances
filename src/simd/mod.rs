@@ -29,6 +29,18 @@ pub fn euclidean_sq_f64(a: &[f64], b: &[f64]) -> f64 {
     Vectorized::squared_euclidean(a, b)
 }
 
+/// Computes the euclidean distance between two vectors.
+#[must_use]
+pub fn euclidean_u32(a: &[u32], b: &[u32]) -> f32 {
+    Vectorized::euclidean(a, b)
+}
+
+/// Computes the euclidean distance between two vectors.
+#[must_use]
+pub fn euclidean_sq_u32(a: &[u32], b: &[u32]) -> f32 {
+    Vectorized::squared_euclidean(a, b)
+}
+
 /// Computes the cosine distance between two vectors.
 #[must_use]
 pub fn cosine_f32(a: &[f32], b: &[f32]) -> f32 {
@@ -38,6 +50,12 @@ pub fn cosine_f32(a: &[f32], b: &[f32]) -> f32 {
 /// Computes the cosine distance between two vectors.
 #[must_use]
 pub fn cosine_f64(a: &[f64], b: &[f64]) -> f64 {
+    Vectorized::cosine(a, b)
+}
+
+/// Computes the cosine distance between two vectors.
+#[must_use]
+pub fn cosine_u32(a: &[u32], b: &[u32]) -> f32 {
     Vectorized::cosine(a, b)
 }
 
@@ -52,12 +70,20 @@ mod f64x2;
 mod f64x4;
 mod f64x8;
 
+mod u32x16;
+mod u32x4;
+mod u32x8;
+
 pub use f32x16::F32x16;
 pub use f32x4::F32x4;
 pub use f32x8::F32x8;
 pub use f64x2::F64x2;
 pub use f64x4::F64x4;
 pub use f64x8::F64x8;
+
+pub use u32x16::U32x16;
+pub use u32x4::U32x4;
+pub use u32x8::U32x8;
 
 pub(crate) trait Naive {
     type Output;
@@ -78,6 +104,8 @@ pub(crate) trait Vectorized {
 
 impl_naive!(f64, f64);
 impl_naive!(f32, f32);
+
+impl_naive_int!(u32, f32);
 
 /// Calculate the euclidean distance between two slices of equal length
 ///
@@ -193,109 +221,275 @@ impl Vectorized for &Vec<f64> {
     }
 }
 
+impl Vectorized for &[u32] {
+    type Output = f32;
+    fn squared_euclidean(self, other: Self) -> Self::Output {
+        if self.len() >= 64 {
+            U32x8::squared_euclidean(self, other)
+        } else {
+            U32x4::squared_euclidean(self, other)
+        }
+    }
+
+    fn euclidean(self, other: Self) -> Self::Output {
+        Vectorized::squared_euclidean(self, other).sqrt()
+    }
+
+    fn cosine(self, other: Self) -> Self::Output {
+        if self.len() >= 64 {
+            U32x8::squared_euclidean(self, other)
+        } else {
+            U32x4::cosine(self, other)
+        }
+    }
+}
+
+impl Vectorized for &Vec<u32> {
+    type Output = f32;
+    fn squared_euclidean(self, other: Self) -> Self::Output {
+        if self.len() >= 64 {
+            U32x8::squared_euclidean(self, other)
+        } else {
+            U32x4::squared_euclidean(self, other)
+        }
+    }
+
+    fn euclidean(self, other: Self) -> Self::Output {
+        Vectorized::squared_euclidean(self, other).sqrt()
+    }
+
+    fn cosine(self, other: Self) -> Self::Output {
+        if self.len() >= 64 {
+            U32x8::cosine(self, other)
+        } else {
+            U32x4::cosine(self, other)
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
+    mod f32_tests {
+        use super::*;
 
-    pub const XS: [f32; 72] = [
-        6.1125, 10.795, 20.0, 0.0, 10.55, 10.63, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.26, 10.73, 0.0,
-        0.0, 20.0, 0.0, 10.4975, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0, 0.0, 20.0, 20.0, 20.0,
-        0.0, 0.0, 0.0, 0.0, 10.475, 6.0905, 20.0, 0.0, 20.0, 20.0, 0.0, 10.5375, 10.54, 10.575,
-        0.0, 0.0, 0.0, 10.76, 10.755, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0,
-        20.0, 0.0, 20.0, 0.0, 0.0, 20.0, 0.0, 0.0, 0.0, 20.0,
-    ];
-    pub const YS: [f32; 72] = [
-        6.0905, 20.0, 0.0, 20.0, 20.0, 0.0, 10.5375, 10.54, 10.575, 0.0, 0.0, 0.0, 10.76, 10.755,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0, 20.0, 0.0, 20.0, 0.0, 0.0,
-        20.0, 0.0, 0.0, 0.0, 20.0, 6.1125, 10.795, 20.0, 0.0, 10.55, 10.63, 20.0, 0.0, 0.0, 0.0,
-        0.0, 0.0, 10.26, 10.73, 0.0, 0.0, 20.0, 0.0, 10.4975, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-        20.0, 0.0, 20.0, 20.0, 20.0, 0.0, 0.0, 0.0, 0.0, 10.475,
-    ];
+        pub const XS: [f32; 72] = [
+            6.1125, 10.795, 20.0, 0.0, 10.55, 10.63, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.26, 10.73,
+            0.0, 0.0, 20.0, 0.0, 10.4975, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0, 0.0, 20.0, 20.0,
+            20.0, 0.0, 0.0, 0.0, 0.0, 10.475, 6.0905, 20.0, 0.0, 20.0, 20.0, 0.0, 10.5375, 10.54,
+            10.575, 0.0, 0.0, 0.0, 10.76, 10.755, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 20.0, 20.0, 0.0, 20.0, 0.0, 0.0, 20.0, 0.0, 0.0, 0.0, 20.0,
+        ];
+        pub const YS: [f32; 72] = [
+            6.0905, 20.0, 0.0, 20.0, 20.0, 0.0, 10.5375, 10.54, 10.575, 0.0, 0.0, 0.0, 10.76,
+            10.755, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0, 20.0, 0.0, 20.0,
+            0.0, 0.0, 20.0, 0.0, 0.0, 0.0, 20.0, 6.1125, 10.795, 20.0, 0.0, 10.55, 10.63, 20.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 10.26, 10.73, 0.0, 0.0, 20.0, 0.0, 10.4975, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 20.0, 0.0, 20.0, 20.0, 20.0, 0.0, 0.0, 0.0, 0.0, 10.475,
+        ];
 
-    #[test]
-    fn verify() {
-        for i in 0..XS.len() {
-            let x = &XS[..i];
-            let y = &YS[..i];
-            let res = scalar_euclidean(x, y);
+        #[test]
+        fn verify() {
+            for i in 0..XS.len() {
+                let x = &XS[..i];
+                let y = &YS[..i];
+                let res = scalar_euclidean(x, y);
+                assert!(
+                    (Vectorized::euclidean(x, y) - res).abs() < 0.0001,
+                    "iter {}, {} != {}",
+                    i,
+                    Vectorized::euclidean(x, y),
+                    res
+                );
+                assert!(
+                    (F32x8::euclidean(x, y) - res).abs() < 0.0001,
+                    "iter {}, {} != {}",
+                    i,
+                    F32x8::euclidean(x, y),
+                    res
+                );
+                assert!(
+                    (F32x4::euclidean(x, y) - res).abs() < 0.0001,
+                    "iter {}, {} != {}",
+                    i,
+                    F32x4::euclidean(x, y),
+                    res
+                );
+            }
+        }
+
+        #[test]
+        fn verify_random() {
+            use symagen::random_data;
+
+            let input_sizes = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
+
+            for i in input_sizes {
+                let data = random_data::random_tabular_seedable(2, i, -10_f32, 10.0, 42);
+                let (a, b) = (&data[0], &data[1]);
+
+                let diff = (vector_euclidean(a, b) - scalar_euclidean(a, b)).abs();
+                assert!(diff <= 1e-4, "diff = {diff}, len = {i}");
+            }
+        }
+
+        #[test]
+        fn smoke_mul() {
+            let a = F32x4::from_slice(&[1.0, 2.0, 3.0, 4.0]);
+            let b = F32x4::from_slice(&[4.0, 3.0, 2.0, 1.0]);
+            let c = a * b;
+            let act: f32 = 4.0 + 6.0 + 6.0 + 4.0;
+            let exp = c.horizontal_add();
             assert!(
-                (Vectorized::euclidean(x, y) - res).abs() < 0.0001,
-                "iter {}, {} != {}",
-                i,
-                Vectorized::euclidean(x, y),
-                res
+                (exp - act).abs() <= f32::EPSILON,
+                "Euclidean squared: expected: {exp}, actual: {act}"
             );
+        }
+
+        #[test]
+        fn smoke_mul_assign() {
+            let mut a = F32x4::from_slice(&[1.0, 2.0, 3.0, 4.0]);
+            let b = F32x4::from_slice(&[4.0, 3.0, 2.0, 1.0]);
+            a *= b;
+            let act: f32 = 4.0 + 6.0 + 6.0 + 4.0;
+            let exp = a.horizontal_add();
             assert!(
-                (F32x8::euclidean(x, y) - res).abs() < 0.0001,
-                "iter {}, {} != {}",
-                i,
-                F32x8::euclidean(x, y),
-                res
+                (exp - act).abs() <= f32::EPSILON,
+                "Euclidean squared: expected: {exp}, actual: {act}"
             );
-            assert!(
-                (F32x4::euclidean(x, y) - res).abs() < 0.0001,
-                "iter {}, {} != {}",
-                i,
-                F32x4::euclidean(x, y),
-                res
-            );
+        }
+
+        #[test]
+        fn smoke_add() {
+            let a = F32x4::from_slice(&[1.0, 2.0, 3.0, 4.0]);
+            let b = F32x4::from_slice(&[4.0, 3.0, 2.0, 1.0]);
+            let c = a + b;
+            assert_eq!(c, F32x4::new(5.0, 5.0, 5.0, 5.0));
+        }
+
+        #[test]
+        fn smoke_sub() {
+            let a = F32x4::from_slice(&[1.0, 2.0, 3.0, 4.0]);
+            let b = F32x4::from_slice(&[4.0, 3.0, 2.0, 1.0]);
+            let c = a - b;
+            assert_eq!(c, F32x4::new(-3.0, -1.0, 1.0, 3.0));
         }
     }
 
-    #[test]
-    fn verify_random() {
-        use symagen::random_data;
+    mod u32_tests {
+        use super::*;
+        pub const XS: [u32; 72] = [
+            6, 10, 20, 0, 10, 10, 20, 0, 0, 0, 0, 0, 10, 10, 0, 0, 20, 0, 10, 0, 0, 0, 0, 0, 0, 0,
+            20, 0, 20, 20, 20, 0, 0, 0, 0, 10, 6, 20, 0, 20, 20, 0, 10, 10, 10, 0, 0, 0, 10, 10, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 20, 0, 20, 0, 0, 20, 0, 0, 0, 20,
+        ];
+        pub const YS: [u32; 72] = [
+            6, 20, 0, 20, 20, 0, 10, 10, 10, 0, 0, 0, 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20,
+            20, 0, 20, 0, 0, 20, 0, 0, 0, 20, 6, 10, 20, 0, 10, 10, 20, 0, 0, 0, 0, 0, 10, 10, 0,
+            0, 20, 0, 10, 0, 0, 0, 0, 0, 0, 0, 20, 0, 20, 20, 20, 0, 0, 0, 0, 10,
+        ];
 
-        let input_sizes = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
+        #[test]
+        fn verify() {
+            for i in 0..XS.len() {
+                let x = &XS[..i];
+                let y = &YS[..i];
+                let res = scalar_euclidean(x, y);
+                assert!(
+                    (Vectorized::euclidean(x, y) - res).abs() < 0.0001,
+                    "iter {}, {} != {}",
+                    i,
+                    Vectorized::euclidean(x, y),
+                    res
+                );
+                assert!(
+                    (U32x8::euclidean(x, y) - res).abs() < 0.0001,
+                    "iter {}, {} != {}",
+                    i,
+                    U32x8::euclidean(x, y),
+                    res
+                );
 
-        for i in input_sizes {
-            let data = random_data::random_tabular_seedable(2, i, -10_f32, 10.0, 42);
-            let (a, b) = (&data[0], &data[1]);
+                assert!(
+                    (U32x16::euclidean(x, y) - res).abs() < 0.0001,
+                    "iter {}, {} != {}",
+                    i,
+                    U32x16::euclidean(x, y),
+                    res
+                );
 
-            let diff = (vector_euclidean(a, b) - scalar_euclidean(a, b)).abs();
-            assert!(diff <= 1e-4, "diff = {diff}, len = {i}");
+                assert!(
+                    (U32x4::euclidean(x, y) - res).abs() < 0.0001,
+                    "iter {}, {} != {}",
+                    i,
+                    U32x4::euclidean(x, y),
+                    res
+                );
+            }
         }
-    }
 
-    #[test]
-    fn smoke_mul() {
-        let a = F32x4::from_slice(&[1.0, 2.0, 3.0, 4.0]);
-        let b = F32x4::from_slice(&[4.0, 3.0, 2.0, 1.0]);
-        let c = a * b;
-        let act: f32 = 4.0 + 6.0 + 6.0 + 4.0;
-        let exp = c.horizontal_add();
-        assert!(
-            (exp - act).abs() <= f32::EPSILON,
-            "Euclidean squared: expected: {exp}, actual: {act}"
-        );
-    }
+        #[test]
+        fn verify_random() {
+            use symagen::random_data;
 
-    #[test]
-    fn smoke_mul_assign() {
-        let mut a = F32x4::from_slice(&[1.0, 2.0, 3.0, 4.0]);
-        let b = F32x4::from_slice(&[4.0, 3.0, 2.0, 1.0]);
-        a *= b;
-        let act: f32 = 4.0 + 6.0 + 6.0 + 4.0;
-        let exp = a.horizontal_add();
-        assert!(
-            (exp - act).abs() <= f32::EPSILON,
-            "Euclidean squared: expected: {exp}, actual: {act}"
-        );
-    }
+            let input_sizes = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
 
-    #[test]
-    fn smoke_add() {
-        let a = F32x4::from_slice(&[1.0, 2.0, 3.0, 4.0]);
-        let b = F32x4::from_slice(&[4.0, 3.0, 2.0, 1.0]);
-        let c = a + b;
-        assert_eq!(c, F32x4::new(5.0, 5.0, 5.0, 5.0));
-    }
+            use rand::Rng;
+            let mut rng = rand::thread_rng();
 
-    #[test]
-    fn smoke_sub() {
-        let a = F32x4::from_slice(&[1.0, 2.0, 3.0, 4.0]);
-        let b = F32x4::from_slice(&[4.0, 3.0, 2.0, 1.0]);
-        let c = a - b;
-        assert_eq!(c, F32x4::new(-3.0, -1.0, 1.0, 3.0));
+            for i in input_sizes {
+                let seed = rng.gen();
+                let data = random_data::random_tabular_seedable(2, i, 0_u32, 20, seed);
+                let (a, b) = (&data[0], &data[1]);
+
+                assert_eq!(
+                    vector_euclidean(a, b),
+                    scalar_euclidean(a, b),
+                    "failed on iter {i} with seed {seed}"
+                );
+            }
+        }
+
+        #[test]
+        fn smoke_mul() {
+            let a = U32x4::from_slice(&[1, 2, 3, 4]);
+            let b = U32x4::from_slice(&[4, 3, 2, 1]);
+            let c = a * b;
+            let act: u32 = 4 + 6 + 6 + 4;
+            let exp = c.horizontal_add();
+            assert_eq!(
+                exp, act,
+                "Euclidean squared: expected: {exp}, actual: {act}"
+            );
+        }
+
+        #[test]
+        fn smoke_mul_assign() {
+            let mut a = U32x4::from_slice(&[1, 2, 3, 4]);
+            let b = U32x4::from_slice(&[4, 3, 2, 1]);
+            a *= b;
+            let act: u32 = 4 + 6 + 6 + 4;
+            let exp = a.horizontal_add();
+            assert_eq!(
+                exp, act,
+                "Euclidean squared: expected: {exp}, actual: {act}"
+            );
+        }
+
+        #[test]
+        fn smoke_add() {
+            let a = U32x4::from_slice(&[1, 2, 3, 4]);
+            let b = U32x4::from_slice(&[4, 3, 2, 1]);
+            let c = a + b;
+            assert_eq!(c, U32x4::new(5, 5, 5, 5));
+        }
+
+        #[test]
+        fn smoke_sub() {
+            let a = U32x4::from_slice(&[4, 3, 5, 6]);
+            let b = U32x4::from_slice(&[1, 2, 3, 4]);
+            let c = a - b;
+            assert_eq!(c, U32x4::new(3, 1, 2, 2));
+        }
     }
 }
