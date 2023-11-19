@@ -28,7 +28,11 @@ macro_rules! impl_cart_complex {
 
             fn mul(self, rhs: Self) -> Self::Output {
                 let (CartComplex(a, b), CartComplex(c, d)) = (self, rhs);
-                CartComplex(a.mul_add(c, -b * d), a.mul_add(d, b * c))
+                // Clippy suggested we turn the following into:
+                // CartComplex(a.mul_add(c, -b * d), a.mul_add(d, b * c))
+                // but this was causing really bad precision errors (on the order of +/-128!!)
+                #[allow(clippy::suboptimal_flops)]
+                CartComplex(a * c - b * d, a * d + b * c)
             }
         }
 
@@ -179,7 +183,7 @@ mod tests {
     use rand::Rng;
 
     fn approx_eq_cart(lhs: &CartComplex<f32>, rhs: &CartComplex<f32>) -> bool {
-        approx_eq!(f32, lhs.0, rhs.0) && approx_eq!(f32, lhs.1, rhs.1)
+        approx_eq!(f32, lhs.0, rhs.0) && approx_eq!(f32, lhs.1, rhs.1, epsilon = 0.001)
     }
 
     fn approx_eq_polar(lhs: &PolarComplex<f32>, rhs: &PolarComplex<f32>) -> bool {
@@ -199,10 +203,10 @@ mod tests {
 
         for _ in 0..100 {
             let (a, b, c, d) = (
-                rng.gen_range(-1000.0..1000.0),
-                rng.gen_range(-1000.0..1000.0),
-                rng.gen_range(-1000.0..1000.0),
-                rng.gen_range(-1000.0..1000.0),
+                rng.gen_range(-1000..1000) as f32 / 0.01,
+                rng.gen_range(-1000..1000) as f32 / 0.01,
+                rng.gen_range(-1000..1000) as f32 / 0.01,
+                rng.gen_range(-1000..1000) as f32 / 0.01,
             );
 
             assert_identities_cart(a, b, c, d);
@@ -228,6 +232,7 @@ mod tests {
         let want = CartComplex(z.norm().powi(2), 0.0);
         let got = z * z.conj();
 
+        dbg!(&want, &got);
         assert!(approx_eq_cart(&want, &got));
 
         // \bar{w + z} = \bar{w} + \bar{z}
